@@ -1,4 +1,7 @@
-const readline = require('readline')
+import readline from 'readline'
+
+import formatProduction from './util/formatProduction.js'
+import isValidProduction from './util/isValidProduction.js'
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -7,14 +10,6 @@ const rl = readline.createInterface({
 
 const productions = []
 let grammar = {}
-
-const isValidProduction = (input) => {
-    return /^[A-Z]:\s*[^|\|\s]+[^|]*(\s*\|\s*[^|\|\s]+[^|]*)*\s*$/.test(input)
-}
-
-const formatProduction = (input) => {
-    return input.replace(/\s/g, '')
-}
 
 const enterProductions = () => {
     rl.question('Enter a production: ', (input) => {
