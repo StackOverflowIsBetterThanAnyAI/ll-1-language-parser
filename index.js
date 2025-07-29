@@ -10,6 +10,25 @@ const rl = readline.createInterface({
 
 const productions = []
 let grammar = {}
+const firstSets = {}
+
+const calculateFirstSets = () => {
+    const nonTerminals = Object.keys(grammar)
+    Object.entries(grammar).map(([lhs, rhs]) => {
+        firstSets[lhs] = []
+        rhs.map((r) => {
+            if (
+                !nonTerminals.includes(r[0]) &&
+                !firstSets[lhs].includes(r[0])
+            ) {
+                firstSets[lhs].push(r[0])
+            } else {
+                // recursive
+            }
+        })
+    })
+    console.log('First Sets:', firstSets)
+}
 
 const enterProductions = () => {
     rl.question('Enter a production: ', (input) => {
@@ -91,6 +110,7 @@ const removeDirectLeftRecursion = () => {
     })
     grammar = updatedGrammar
     console.log(grammar)
+    calculateFirstSets()
 }
 
 const splitProductions = () => {
