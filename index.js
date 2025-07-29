@@ -6,7 +6,7 @@ const rl = readline.createInterface({
 })
 
 const productions = []
-const grammar = {}
+let grammar = {}
 
 const isValidProduction = (input) => {
     return /^[A-Z]:\s*[^|\|\s]+[^|]*(\s*\|\s*[^|\|\s]+[^|]*)*\s*$/.test(input)
@@ -63,18 +63,39 @@ const productionInstructions = () => {
 }
 
 const removeDirectLeftRecursion = () => {
+    const updatedGrammar = {}
     Object.entries(grammar).map(([lhs, rhs]) => {
-        let hasDirectLeftRecursion = false
+        const recursiveProductions = []
+        const nonRecursiveProductions = []
         rhs.map((r) => {
             if (lhs.charAt(0) === r[0]) {
-                hasDirectLeftRecursion = true
+                recursiveProductions.push([...r])
+            } else {
+                nonRecursiveProductions.push([...r])
             }
         })
-        if (hasDirectLeftRecursion) {
+        updatedGrammar[lhs] = nonRecursiveProductions
+        if (recursiveProductions.length > 0) {
             grammar[`${lhs}'`] = []
+            updatedGrammar[lhs] = nonRecursiveProductions.map((item) => {
+                const copy = [...item]
+                if (copy[0] === '_') {
+                    copy.shift()
+                }
+                copy.push(`${lhs}'`)
+                return copy
+            })
+            updatedGrammar[`${lhs}'`] = recursiveProductions.map((item) => {
+                const copy = [...item]
+                copy.shift()
+                copy.push(`${lhs}'`)
+                return copy
+            })
+            updatedGrammar[`${lhs}'`].push(['_'])
         }
-        console.log(grammar)
     })
+    grammar = updatedGrammar
+    console.log(grammar)
 }
 
 const splitProductions = () => {
