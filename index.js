@@ -17,17 +17,53 @@ const calculateFirstSets = () => {
     Object.entries(grammar).map(([lhs, rhs]) => {
         firstSets[lhs] = []
         rhs.map((r) => {
-            if (
-                !nonTerminals.includes(r[0]) &&
-                !firstSets[lhs].includes(r[0])
-            ) {
+            if (!firstSets[lhs].includes(r[0])) {
                 firstSets[lhs].push(r[0])
-            } else {
-                // recursive
             }
         })
     })
-    console.log('First Sets:', firstSets)
+
+    const nonTerminalInFirst = Object.values(firstSets)
+        .toString()
+        .split(',')
+        .some((item) => {
+            return nonTerminals.includes(item)
+        })
+    if (nonTerminalInFirst) {
+        calculateFirstSetsRecursive(nonTerminals)
+    }
+}
+
+const calculateFirstSetsRecursive = (nonTerminals) => {
+    Object.entries(firstSets).map(([lhs, first]) => {
+        const rhs = []
+        first.map((item) => {
+            if (nonTerminals.includes(item)) {
+                for (let i = 0; i < firstSets[item].length; i++) {
+                    if (
+                        !rhs.includes(firstSets[item][i]) &&
+                        lhs !== firstSets[item][i]
+                    ) {
+                        rhs.push(firstSets[item][i])
+                    }
+                }
+            } else if (!rhs.includes(item)) {
+                rhs.push(item)
+            }
+        })
+        firstSets[lhs] = rhs.flat()
+    })
+    const nonTerminalInFirst = Object.values(firstSets)
+        .toString()
+        .split(',')
+        .some((item) => {
+            console.log(item)
+            return nonTerminals.includes(item)
+        })
+    if (nonTerminalInFirst) {
+        return calculateFirstSetsRecursive(nonTerminals)
+    }
+    console.log('First Sets: ', firstSets)
 }
 
 const enterProductions = () => {
@@ -109,7 +145,6 @@ const removeDirectLeftRecursion = () => {
         }
     })
     grammar = updatedGrammar
-    console.log(grammar)
     calculateFirstSets()
 }
 
