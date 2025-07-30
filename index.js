@@ -22,48 +22,45 @@ const calculateFirstSets = () => {
             }
         })
     })
-
     const nonTerminalInFirst = Object.values(firstSets)
         .toString()
         .split(',')
         .some((item) => {
             return nonTerminals.includes(item)
         })
-    if (nonTerminalInFirst) {
-        calculateFirstSetsRecursive(nonTerminals)
-    }
+    calculateFirstSetsRecursive(nonTerminals, nonTerminalInFirst)
 }
 
-const calculateFirstSetsRecursive = (nonTerminals) => {
-    Object.entries(firstSets).map(([lhs, first]) => {
-        const rhs = []
-        first.map((item) => {
-            if (nonTerminals.includes(item)) {
-                for (let i = 0; i < firstSets[item].length; i++) {
-                    if (
-                        !rhs.includes(firstSets[item][i]) &&
-                        lhs !== firstSets[item][i]
-                    ) {
-                        rhs.push(firstSets[item][i])
+const calculateFirstSetsRecursive = (nonTerminals, nonTerminalInRHS) => {
+    if (nonTerminalInRHS) {
+        Object.entries(firstSets).map(([lhs, first]) => {
+            const rhs = []
+            first.map((item) => {
+                if (nonTerminals.includes(item)) {
+                    for (let i = 0; i < firstSets[item].length; i++) {
+                        if (
+                            !rhs.includes(firstSets[item][i]) &&
+                            lhs !== firstSets[item][i]
+                        ) {
+                            rhs.push(firstSets[item][i])
+                        }
                     }
+                } else if (!rhs.includes(item)) {
+                    rhs.push(item)
                 }
-            } else if (!rhs.includes(item)) {
-                rhs.push(item)
-            }
+            })
+            firstSets[lhs] = rhs.flat()
         })
-        firstSets[lhs] = rhs.flat()
-    })
-    const nonTerminalInFirst = Object.values(firstSets)
-        .toString()
-        .split(',')
-        .some((item) => {
-            console.log(item)
-            return nonTerminals.includes(item)
-        })
-    if (nonTerminalInFirst) {
-        return calculateFirstSetsRecursive(nonTerminals)
+        const nonTerminalInFirst = Object.values(firstSets)
+            .toString()
+            .split(',')
+            .some((item) => {
+                return nonTerminals.includes(item)
+            })
+        return calculateFirstSetsRecursive(nonTerminals, nonTerminalInFirst)
+    } else {
+        console.log('First Sets: ', firstSets)
     }
-    console.log('First Sets: ', firstSets)
 }
 
 const enterProductions = () => {
