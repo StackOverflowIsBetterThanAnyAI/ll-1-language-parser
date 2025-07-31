@@ -94,9 +94,10 @@ const calculateFollowSets = (nonTerminals) => {
                         .filter((item) => item !== '_')
                     if (follow.length) {
                         followSets[item[i]] = [
-                            ...new Set(
-                                followSets[item[i]].flat().concat(filtered)
-                            ),
+                            ...new Set([
+                                ...followSets[item[i]].flat(),
+                                ...filtered,
+                            ]),
                         ]
                     }
                 }
@@ -119,7 +120,7 @@ const calculateFollowSetsRecursive = (followInSet) => {
                     const followLhs = item
                         .replace(/^FOLLOW\(/, '')
                         .replace(/\)/, '')
-                    rhs.push(followSets[followLhs])
+                    rhs.push(...followSets[followLhs])
                 } else {
                     rhs.push(item)
                 }
@@ -197,7 +198,7 @@ const removeDirectLeftRecursion = () => {
                 nonRecursiveProductions.push([...r])
             }
         })
-        updatedGrammar[lhs] = nonRecursiveProductions
+        updatedGrammar[lhs] = [...nonRecursiveProductions]
         if (recursiveProductions.length > 0) {
             updatedGrammar[lhs] = nonRecursiveProductions.map((item) => {
                 const copy = [...item]
