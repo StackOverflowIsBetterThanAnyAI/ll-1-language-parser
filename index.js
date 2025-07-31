@@ -11,6 +11,7 @@ const rl = readline.createInterface({
 const productions = []
 let grammar = {}
 const firstSets = {}
+const followSets = {}
 
 const calculateFirstSets = () => {
     const nonTerminals = Object.keys(grammar)
@@ -60,7 +61,13 @@ const calculateFirstSetsRecursive = (nonTerminals, nonTerminalInRHS) => {
         return calculateFirstSetsRecursive(nonTerminals, nonTerminalInFirst)
     } else {
         console.log('First Sets: ', firstSets)
+        calculateFollowSets(nonTerminals)
     }
+}
+
+const calculateFollowSets = (nonTerminals) => {
+    followSets['/start/'] = ['$']
+    console.log('Follow Sets: ', followSets)
 }
 
 const enterProductions = () => {
@@ -111,6 +118,7 @@ const productionInstructions = () => {
 
 const removeDirectLeftRecursion = () => {
     const updatedGrammar = {}
+    updatedGrammar['/start/'] = [Object.keys(grammar)[0]]
     Object.entries(grammar).map(([lhs, rhs]) => {
         const recursiveProductions = []
         const nonRecursiveProductions = []
@@ -123,25 +131,25 @@ const removeDirectLeftRecursion = () => {
         })
         updatedGrammar[lhs] = nonRecursiveProductions
         if (recursiveProductions.length > 0) {
-            grammar[`${lhs}'`] = []
             updatedGrammar[lhs] = nonRecursiveProductions.map((item) => {
                 const copy = [...item]
                 if (copy[0] === '_') {
                     copy.shift()
                 }
-                copy.push(`${lhs}'`)
+                copy.push(`${lhs}/'/`)
                 return copy
             })
-            updatedGrammar[`${lhs}'`] = recursiveProductions.map((item) => {
+            updatedGrammar[`${lhs}/'/`] = recursiveProductions.map((item) => {
                 const copy = [...item]
                 copy.shift()
-                copy.push(`${lhs}'`)
+                copy.push(`${lhs}/'/`)
                 return copy
             })
-            updatedGrammar[`${lhs}'`].push(['_'])
+            updatedGrammar[`${lhs}/'/`].push(['_'])
         }
     })
     grammar = updatedGrammar
+    console.log(grammar)
     calculateFirstSets()
 }
 
