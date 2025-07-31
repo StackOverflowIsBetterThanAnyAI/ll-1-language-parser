@@ -103,10 +103,38 @@ const calculateFollowSets = (nonTerminals) => {
             }
         })
     })
-    calculateFollowSetsRecursive()
+    const followInSet = Object.values(followSets)
+        .toString()
+        .split(',')
+        .some((item) => item.startsWith('FOLLOW('))
+    calculateFollowSetsRecursive(followInSet)
 }
 
-const calculateFollowSetsRecursive = () => {
+const calculateFollowSetsRecursive = (followInSet) => {
+    if (followInSet) {
+        Object.entries(followSets).map(([lhs, follow]) => {
+            const rhs = []
+            follow.map((item) => {
+                if (/^FOLLOW\(.+\)$/.test(item)) {
+                    const followLhs = item
+                        .replace(/^FOLLOW\(/, '')
+                        .replace(/\)/, '')
+                    rhs.push(followSets[followLhs])
+                } else {
+                    rhs.push(item)
+                }
+                followSets[lhs] = rhs.flat()
+            })
+        })
+
+        const followInSet = Object.values(followSets)
+            .toString()
+            .split(',')
+            .some((item) => item.startsWith('FOLLOW('))
+        return calculateFollowSetsRecursive(followInSet)
+    } else {
+        // next step
+    }
     console.log('Follow Sets: ', followSets)
 }
 
