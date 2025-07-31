@@ -60,13 +60,53 @@ const calculateFirstSetsRecursive = (nonTerminals, nonTerminalInRHS) => {
             })
         return calculateFirstSetsRecursive(nonTerminals, nonTerminalInFirst)
     } else {
-        console.log('First Sets: ', firstSets)
         calculateFollowSets(nonTerminals)
     }
 }
 
 const calculateFollowSets = (nonTerminals) => {
     followSets['/start/'] = ['$']
+    Object.entries(grammar).map(([lhs, _rhs]) => {
+        if (lhs !== '/start/') {
+            followSets[lhs] = []
+        }
+    })
+    Object.entries(grammar).map(([lhs, rhs]) => {
+        rhs.map((item) => {
+            for (let i = 0; i < item.length; i++) {
+                const follow = []
+                if (nonTerminals.includes(item[i])) {
+                    if (item[i + 1]) {
+                        follow.push(firstSets[item[i + 1]] ?? item[i + 1])
+                        if (
+                            firstSets[item[i + 1]] &&
+                            firstSets[item[i + 1]].includes('_') &&
+                            !followSets[item[i]].includes(`FOLLOW(${lhs})`) &&
+                            lhs !== item[i]
+                        ) {
+                            follow.push(`FOLLOW(${lhs})`)
+                        }
+                    } else if (lhs !== item[i]) {
+                        follow.push(`FOLLOW(${lhs})`)
+                    }
+                    const filtered = follow
+                        .flat()
+                        .filter((item) => item !== '_')
+                    if (follow.length) {
+                        followSets[item[i]] = [
+                            ...new Set(
+                                followSets[item[i]].flat().concat(filtered)
+                            ),
+                        ]
+                    }
+                }
+            }
+        })
+    })
+    calculateFollowSetsRecursive()
+}
+
+const calculateFollowSetsRecursive = () => {
     console.log('Follow Sets: ', followSets)
 }
 
