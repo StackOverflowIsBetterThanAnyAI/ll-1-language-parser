@@ -65,9 +65,9 @@ const calculateFirstSetsRecursive = (nonTerminals, nonTerminalInRHS) => {
 }
 
 const calculateFollowSets = (nonTerminals) => {
-    followSets['/start/'] = ['$']
+    followSets['_start_'] = ['$']
     Object.entries(grammar).forEach(([lhs, _rhs]) => {
-        if (lhs !== '/start/') {
+        if (lhs !== '_start_') {
             followSets[lhs] = []
         }
     })
@@ -193,7 +193,7 @@ const productionInstructions = () => {
 
 const removeDirectLeftRecursion = () => {
     const updatedGrammar = {}
-    updatedGrammar['/start/'] = [Object.keys(grammar)[0]]
+    updatedGrammar['_start_'] = [Object.keys(grammar)[0]]
     Object.entries(grammar).forEach(([lhs, rhs]) => {
         const recursiveProductions = []
         const nonRecursiveProductions = []
@@ -211,16 +211,16 @@ const removeDirectLeftRecursion = () => {
                 if (copy[0] === '_') {
                     copy.shift()
                 }
-                copy.push(`${lhs}/'`)
+                copy.push(`${lhs}_rr`)
                 return copy
             })
-            updatedGrammar[`${lhs}/'`] = recursiveProductions.map((item) => {
+            updatedGrammar[`${lhs}_rr`] = recursiveProductions.map((item) => {
                 const copy = [...item]
                 copy.shift()
-                copy.push(`${lhs}/'`)
+                copy.push(`${lhs}_rr`)
                 return copy
             })
-            updatedGrammar[`${lhs}/'`].push(['_'])
+            updatedGrammar[`${lhs}_rr`].push(['_'])
         }
     })
     grammar = updatedGrammar
