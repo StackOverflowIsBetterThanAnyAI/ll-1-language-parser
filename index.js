@@ -191,19 +191,25 @@ const leftFactorGrammar = () => {
             }
             const sorted = [...letters.sort((a, b) => a - b)]
             let cur = sorted[0]
+            const duplicates = []
             let isSameLetter = false
             for (let j = 1; j < sorted.length; j++) {
                 if (sorted[j] === cur) {
                     isSameLetter = true
-                    break
+                    duplicates.push(sorted[j])
                 }
                 cur = sorted[j]
             }
             if (isSameLetter) {
-                Object.assign(
-                    leftFactorGrammar,
-                    leftFactorGrammarRecursive(lhs, rhs, cur, true)
+                const uniqueDuplicates = [...new Set(duplicates)]
+                const factored = leftFactorGrammarRecursive(
+                    lhs,
+                    rhs,
+                    uniqueDuplicates,
+                    true,
+                    {}
                 )
+                Object.assign(leftFactorGrammar, factored)
             } else {
                 leftFactorGrammar[lhs] = rhs
             }
@@ -216,65 +222,56 @@ const leftFactorGrammar = () => {
     calculateFirstSets()
 }
 
-const leftFactorGrammarRecursive = (lhs, rhs, cur, isSameLetter) => {
-    console.log(isSameLetter, 'isSameLetter')
+const leftFactorGrammarRecursive = (
+    lhs,
+    rhs,
+    cur,
+    isSameLetter,
+    factoredGrammar
+) => {
     if (isSameLetter && rhs.length > 1) {
-        console.log(lhs, rhs, cur, 'rec')
-
-        const odd = rhs
-            .map((item, index) => (item[0] !== cur ? index : -1))
+        const oddIndices = rhs
+            .map((item, index) => (!cur.includes(item[0]) ? index : -1))
             .filter((item) => item > -1)
 
-        console.log(odd, 'index')
+        const newLhsList = cur.map((item) => `${lhs}_lf_${item}`)
 
-        if (odd.length === rhs.length) {
-            console.log('gg')
-        }
-
-        const newLhs = `${lhs}_lf`
         const newRhs = [
-            ...rhs
-                .map((item, index) => {
-                    if (odd.includes(index)) {
-                        return [item[0]]
-                    }
-                    return null
-                })
-                .filter((item) => item),
-            [cur, newLhs],
+            ...oddIndices.map((index) => rhs[index]),
+            ...cur.map((item, index) => [item, newLhsList[index]]),
         ]
 
-        const nextRhs = rhs
-            .map((item) => [...item.slice(1)])
-            .filter((item) => item.length)
+        factoredGrammar[lhs] = newRhs
 
-        console.log(newRhs, 'newRhs')
+        cur.forEach((item, index) => {
+            const newLhs = newLhsList[index]
+            const matching = rhs
+                .filter((prod) => prod[0] === item)
+                .map((prod) =>
+                    prod.slice(1).length > 0 ? prod.slice(1) : ['_']
+                )
 
-        let letters = []
-        for (let j = 0; j < nextRhs.length; j++) {
-            letters.push(nextRhs[j][0])
-        }
-        const sorted = [...letters.sort((a, b) => a - b)]
-        let newCur = sorted[0]
-        let isNewSameLetter = false
-        for (let j = 1; j < sorted.length; j++) {
-            if (sorted[j] === newCur) {
-                isNewSameLetter = true
-                break
-            }
-            newCur = sorted[j]
-        }
+            const nextLetters = matching.map((prod) => prod[0])
+            const duplicates = nextLetters.filter(
+                (x, i, arr) => arr.indexOf(x) !== i
+            )
+            const isNextSameLetter = duplicates.length > 0
+            const uniqueDuplicates = [...new Set(duplicates)]
 
-        return {
-            [lhs]: newRhs,
-            ...leftFactorGrammarRecursive(
+            leftFactorGrammarRecursive(
                 newLhs,
-                nextRhs,
-                newCur,
-                isNewSameLetter
-            ),
-        }
-    } else return { [lhs]: rhs }
+                matching,
+                uniqueDuplicates,
+                isNextSameLetter,
+                factoredGrammar
+            )
+        })
+
+        return factoredGrammar
+    } else {
+        factoredGrammar[lhs] = rhs
+        return factoredGrammar
+    }
 }
 
 const productionInstructions = () => {
