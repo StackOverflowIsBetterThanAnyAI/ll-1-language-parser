@@ -15,9 +15,9 @@ const followSets = {}
 
 const calculateFirstSets = () => {
     const nonTerminals = Object.keys(grammar)
-    Object.entries(grammar).map(([lhs, rhs]) => {
+    Object.entries(grammar).forEach(([lhs, rhs]) => {
         firstSets[lhs] = []
-        rhs.map((r) => {
+        rhs.forEach((r) => {
             if (!firstSets[lhs].includes(r[0])) {
                 firstSets[lhs].push(r[0])
             }
@@ -34,9 +34,9 @@ const calculateFirstSets = () => {
 
 const calculateFirstSetsRecursive = (nonTerminals, nonTerminalInRHS) => {
     if (nonTerminalInRHS) {
-        Object.entries(firstSets).map(([lhs, first]) => {
+        Object.entries(firstSets).forEach(([lhs, first]) => {
             const rhs = []
-            first.map((item) => {
+            first.forEach((item) => {
                 if (nonTerminals.includes(item)) {
                     for (let i = 0; i < firstSets[item].length; i++) {
                         if (
@@ -66,13 +66,13 @@ const calculateFirstSetsRecursive = (nonTerminals, nonTerminalInRHS) => {
 
 const calculateFollowSets = (nonTerminals) => {
     followSets['/start/'] = ['$']
-    Object.entries(grammar).map(([lhs, _rhs]) => {
+    Object.entries(grammar).forEach(([lhs, _rhs]) => {
         if (lhs !== '/start/') {
             followSets[lhs] = []
         }
     })
-    Object.entries(grammar).map(([lhs, rhs]) => {
-        rhs.map((item) => {
+    Object.entries(grammar).forEach(([lhs, rhs]) => {
+        rhs.forEach((item) => {
             for (let i = 0; i < item.length; i++) {
                 const follow = []
                 if (nonTerminals.includes(item[i])) {
@@ -113,14 +113,20 @@ const calculateFollowSets = (nonTerminals) => {
 
 const calculateFollowSetsRecursive = (followInSet) => {
     if (followInSet) {
-        Object.entries(followSets).map(([lhs, follow]) => {
+        Object.entries(followSets).forEach(([lhs, follow]) => {
             const rhs = []
-            follow.map((item) => {
+            follow.forEach((item) => {
                 if (/^FOLLOW\(.+\)$/.test(item)) {
                     const followLhs = item
                         .replace(/^FOLLOW\(/, '')
                         .replace(/\)/, '')
-                    rhs.push(...followSets[followLhs])
+                    rhs.push(
+                        ...followSets[followLhs].filter(
+                            (item) =>
+                                item ===
+                                item.replace(/^FOLLOW\(/, '').replace(/\)/, '')
+                        )
+                    )
                 } else {
                     rhs.push(item)
                 }
@@ -188,11 +194,11 @@ const productionInstructions = () => {
 const removeDirectLeftRecursion = () => {
     const updatedGrammar = {}
     updatedGrammar['/start/'] = [Object.keys(grammar)[0]]
-    Object.entries(grammar).map(([lhs, rhs]) => {
+    Object.entries(grammar).forEach(([lhs, rhs]) => {
         const recursiveProductions = []
         const nonRecursiveProductions = []
-        rhs.map((r) => {
-            if (lhs.charAt(0) === r[0]) {
+        rhs.forEach((r) => {
+            if (lhs === r[0]) {
                 recursiveProductions.push([...r])
             } else {
                 nonRecursiveProductions.push([...r])
@@ -205,16 +211,16 @@ const removeDirectLeftRecursion = () => {
                 if (copy[0] === '_') {
                     copy.shift()
                 }
-                copy.push(`${lhs}/'/`)
+                copy.push(`${lhs}/'`)
                 return copy
             })
-            updatedGrammar[`${lhs}/'/`] = recursiveProductions.map((item) => {
+            updatedGrammar[`${lhs}/'`] = recursiveProductions.map((item) => {
                 const copy = [...item]
                 copy.shift()
-                copy.push(`${lhs}/'/`)
+                copy.push(`${lhs}/'`)
                 return copy
             })
-            updatedGrammar[`${lhs}/'/`].push(['_'])
+            updatedGrammar[`${lhs}/'`].push(['_'])
         }
     })
     grammar = updatedGrammar
@@ -225,9 +231,9 @@ const removeDirectLeftRecursion = () => {
 const splitProductions = () => {
     let splitProductions = []
 
-    productions.map((item) => {
+    productions.forEach((item) => {
         const [lhs, rhs] = item.split(':')
-        rhs.split('|').map((i) => {
+        rhs.split('|').forEach((i) => {
             splitProductions.push(JSON.stringify([lhs, i]))
         })
     })
@@ -235,7 +241,7 @@ const splitProductions = () => {
         return JSON.parse(item)
     })
 
-    splitProductions.map(([lhs, rhs]) => {
+    splitProductions.forEach(([lhs, rhs]) => {
         const symbols = rhs.split('')
         if (!grammar[lhs]) grammar[lhs] = []
         grammar[lhs].push(symbols)
