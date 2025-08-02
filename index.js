@@ -181,6 +181,102 @@ const enterWordToBeParsed = () => {
     })
 }
 
+const leftFactorGrammar = () => {
+    let leftFactorGrammar = {}
+    Object.entries(grammar).forEach(([lhs, rhs]) => {
+        if (rhs.length > 1) {
+            let letters = []
+            for (let j = 0; j < rhs.length; j++) {
+                letters.push(rhs[j][0])
+            }
+            const sorted = [...letters.sort((a, b) => a - b)]
+            let cur = sorted[0]
+            let isSameLetter = false
+            for (let j = 1; j < sorted.length; j++) {
+                if (sorted[j] === cur) {
+                    isSameLetter = true
+                    break
+                }
+                cur = sorted[j]
+            }
+            if (isSameLetter) {
+                Object.assign(
+                    leftFactorGrammar,
+                    leftFactorGrammarRecursive(lhs, rhs, cur, true)
+                )
+            } else {
+                leftFactorGrammar[lhs] = rhs
+            }
+        } else {
+            leftFactorGrammar[lhs] = rhs
+        }
+    })
+    grammar = leftFactorGrammar
+    console.log('left factored', grammar)
+    calculateFirstSets()
+}
+
+const leftFactorGrammarRecursive = (lhs, rhs, cur, isSameLetter) => {
+    console.log(isSameLetter, 'isSameLetter')
+    if (isSameLetter && rhs.length > 1) {
+        console.log(lhs, rhs, cur, 'rec')
+
+        const odd = rhs
+            .map((item, index) => (item[0] !== cur ? index : -1))
+            .filter((item) => item > -1)
+
+        console.log(odd, 'index')
+
+        if (odd.length === rhs.length) {
+            console.log('gg')
+        }
+
+        const newLhs = `${lhs}_lf`
+        const newRhs = [
+            ...rhs
+                .map((item, index) => {
+                    if (odd.includes(index)) {
+                        return [item[0]]
+                    }
+                    return null
+                })
+                .filter((item) => item),
+            [cur, newLhs],
+        ]
+
+        const nextRhs = rhs
+            .map((item) => [...item.slice(1)])
+            .filter((item) => item.length)
+
+        console.log(newRhs, 'newRhs')
+
+        let letters = []
+        for (let j = 0; j < nextRhs.length; j++) {
+            letters.push(nextRhs[j][0])
+        }
+        const sorted = [...letters.sort((a, b) => a - b)]
+        let newCur = sorted[0]
+        let isNewSameLetter = false
+        for (let j = 1; j < sorted.length; j++) {
+            if (sorted[j] === newCur) {
+                isNewSameLetter = true
+                break
+            }
+            newCur = sorted[j]
+        }
+
+        return {
+            [lhs]: newRhs,
+            ...leftFactorGrammarRecursive(
+                newLhs,
+                nextRhs,
+                newCur,
+                isNewSameLetter
+            ),
+        }
+    } else return { [lhs]: rhs }
+}
+
 const productionInstructions = () => {
     console.log('Please enter your productions in the following format:')
     console.log('')
@@ -225,7 +321,7 @@ const removeDirectLeftRecursion = () => {
     })
     grammar = updatedGrammar
     console.log(grammar)
-    calculateFirstSets()
+    leftFactorGrammar()
 }
 
 const splitProductions = () => {
