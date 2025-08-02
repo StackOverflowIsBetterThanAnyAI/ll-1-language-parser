@@ -140,9 +140,26 @@ const calculateFollowSetsRecursive = (followInSet) => {
             .some((item) => item.startsWith('FOLLOW('))
         return calculateFollowSetsRecursive(followInSet)
     } else {
-        // next step
+        console.log('Follow Sets: ', followSets)
+        calculateParsingTable()
     }
-    console.log('Follow Sets: ', followSets)
+}
+
+const calculateParsingTable = () => {
+    const enumeratedGrammar = []
+    Object.entries(grammar).forEach(([lhs, rhs]) => {
+        rhs.forEach((item) => {
+            enumeratedGrammar.push({ lhs: lhs, rhs: item })
+        })
+    })
+    console.log('enumerated grammar', enumeratedGrammar)
+    // ACTION      s    a    c    _
+    // start
+    // S
+    // S_rr
+    // S_rr_lf_s
+    // A
+    // B
 }
 
 const enterProductions = () => {
